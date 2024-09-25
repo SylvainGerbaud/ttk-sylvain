@@ -68,12 +68,11 @@ namespace ttk {
       // B0
       // ---------------------------------------------------------------------
       size_t const nVertices = triangulation->getNumberOfVertices();
-      std::vector<UnionFind*> uf;
-      //std::vector<UnionFind *> ufList;
-      
+      std::vector<UnionFind> uf(nVertices);
+      std::vector<UnionFind*> ufSeed(nVertices);
+
       for(SimplexId i = 0; i < (SimplexId)nVertices; i++) {
-        //ufList[i] = &(uf[i]);
-        uf.push_back(new UnionFind());
+        ufSeed[i] = &(uf[i]);
       }
        
       // compute each edge of M
@@ -82,46 +81,37 @@ namespace ttk {
         SimplexId a, b;
         triangulation->getEdgeVertex(i, 0, a);
         triangulation->getEdgeVertex(i, 1, b);
-        UnionFind::makeUnion(
-          uf[a], 
-          uf[b]);
+        UnionFind::makeUnion(ufSeed[a], ufSeed[b]);
       } 
   
-      std::vector<UnionFind *> res_uf;
-      for(auto _uf : uf)
+      std::vector<UnionFind *> cc;
+      for(auto _uf : ufSeed)
       {
         auto parent = _uf->find();
         bool isfound = false;
-        for(auto _ufb : res_uf)
+        for(auto _ufb : cc)
         {
           if(parent == _ufb)
-          {
             isfound = true;
-          }
         }
         if(!isfound)
-        {
-          res_uf.push_back(parent);
-        }
+          cc.push_back(parent);
       }
 
-      std::cout << std::endl << "Number of B0 "<< res_uf.size() << std::endl << std::endl; 
-
+     
       // Compute B2
 
-      // Extract edges from the surface
-      std::vector<SimplexId> boundaryVertices(nVertices, -1);
-      int nvertices_boundary = 0;
+      // Extract boundary edges from the surface
+      std::vector<SimplexId> boundaryV(nVertices, -1);
+      int v_boundary = 0;
 
       for (int i = 0 ; i < nVertices ; i++){
         if(triangulation->isVertexOnBoundary(i)){           
-          boundaryVertices[i]=nvertices_boundary;
-          nvertices_boundary++;
+          boundaryV[i] = v_boundary++;
         }
       }
 
       std::vector<SimplexId> boundaryEdges;
-
       for (int i = 0 ; i < nEdges ; i++){
         if(triangulation->isEdgeOnBoundary(i)){           
           boundaryEdges.push_back(i);
@@ -130,22 +120,23 @@ namespace ttk {
 
       //Counting connected components of bounding surface
 
-      std::vector<UnionFind *> boundaryVerticeSeeds(nvertices_boundary);
-      for (int i = 0 ; i < nvertices_boundary ; i++){
-        boundaryVerticeSeeds[i] = new UnionFind();
+      std::vector<UnionFind> boundaryVTmp(v_boundary);
+      std::vector<UnionFind *> boundaryVSeeds(v_boundary);
+      for (int i = 0 ; i < v_boundary ; i++){
+        boundaryVSeeds[i] = &(boundaryVTmp[i]);
       }
 
-      for (int i = 0 ; i < boundaryEdges.size() ; i++){
+      for (int i = 0; i < boundaryEdges.size(); i++){
         SimplexId a,b;
         triangulation->getEdgeVertex(boundaryEdges[i] , 0 , a);
         triangulation->getEdgeVertex(boundaryEdges[i] , 1, b);
-        SimplexId surfaceId1=boundaryVertices[a];
-        SimplexId surfaceId2=boundaryVertices[b];
-        UnionFind::makeUnion(boundaryVerticeSeeds[surfaceId1], boundaryVerticeSeeds[surfaceId2]);
+        SimplexId surfaceId1=boundaryV[a];
+        SimplexId surfaceId2=boundaryV[b];
+        UnionFind::makeUnion(boundaryVSeeds[surfaceId1], boundaryVSeeds[surfaceId2]);
       }
 
       std::vector<UnionFind *> boundaryCC;
-      for(auto seed : boundaryVerticeSeeds) {
+      for(auto seed : boundaryVSeeds) {
         UnionFind* parent = seed->find();
         bool found = false;
         for (auto d : boundaryCC){
@@ -159,15 +150,16 @@ namespace ttk {
         }
       }
 
-      int B_2 = boundaryCC.size()-res_uf.size();
+      int B2 = boundaryCC.size()-cc.size();
 
-      std::cout << std::endl << "Number of B2 "<< B_2 << std::endl << std::endl; 
 
-      // Calculer caraacteristique euler
+      // Compute Euler characteristic
       int x = nVertices - nEdges + triangulation->getNumberOfTriangles() - triangulation->getNumberOfCells();
-      std::cout << std::endl << "Euler characteristics x "<< x << std::endl << std::endl; 
+      std::cout << "Euler characteristic x "<< x << std::endl; 
+      std::cout << "Number of B0 "<< cc.size() << std::endl; 
+      std::cout << "Number of B1 "<< cc.size() + B2 - x << std::endl; 
+      std::cout << "Number of B2 "<< B2 << std::endl; 
 
-      std::cout << std::endl << "Number of B1 "<< res_uf.size() + B_2 - x << std::endl << std::endl; 
 
       return 1; // return success
     }
