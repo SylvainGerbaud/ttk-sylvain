@@ -159,6 +159,7 @@ Identifiers.
           <Entry value="0" text="LTS (IEEE VIS 2020)"/>
           <Entry value="1" text="Legacy Approach (IEEE VIS 2012)"/>
           <Entry value="2" text="Topological Optimization (IEEE VIS 2024)"/>
+          <Entry value="3" text="LTS MPI in progress"/>
         </EnumerationDomain>                      
         <Documentation>
           Choose the simplification algorithm.

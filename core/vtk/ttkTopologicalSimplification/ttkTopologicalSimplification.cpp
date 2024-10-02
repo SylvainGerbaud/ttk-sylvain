@@ -54,6 +54,8 @@ int ttkTopologicalSimplification::RequestData(
     this->setBackend(BACKEND::LEGACY);
   } else if(this->Method == 2) {
     this->setBackend(BACKEND::TO);
+  } else if(this->Method == 3) {
+    this->setBackend(BACKEND::LTSMPI);
   }
 
   const auto domain = vtkDataSet::GetData(inputVector[0]);

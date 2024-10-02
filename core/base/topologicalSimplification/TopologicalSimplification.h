@@ -101,6 +101,7 @@
 #include <Debug.h>
 #include <LegacyTopologicalSimplification.h>
 #include <LocalizedTopologicalSimplification.h>
+#include <LocalizedTopologicalSimplificationMPI.h>
 #include <TopologicalOptimization.h>
 #include <Triangulation.h>
 
@@ -115,7 +116,7 @@ namespace ttk {
   public:
     TopologicalSimplification();
 
-    enum class BACKEND { LEGACY, LTS, TO };
+    enum class BACKEND { LEGACY, LTS, TO , LTSMPI};
     /*
      * Either execute this file "legacy" algorithm, or the
      * lts algorithm. The choice depends on the value of the variable backend_.
@@ -156,6 +157,12 @@ namespace ttk {
           topologyOptimizer_.preconditionTriangulation(triangulation);
           break;
 
+        case BACKEND::LTSMPI:
+          ltsMPIObject_.setDebugLevel(debugLevel_);
+          ltsMPIObject_.setThreadNumber(threadNumber_);
+          ltsMPIObject_.preconditionTriangulation(triangulation);
+          break;
+
         default:
           this->printErr(
             "Error, the backend for topological simplification is invalid");
@@ -168,6 +175,7 @@ namespace ttk {
     BACKEND backend_{BACKEND::LTS};
     LegacyTopologicalSimplification legacyObject_;
     lts::LocalizedTopologicalSimplification ltsObject_;
+    lts::LocalizedTopologicalSimplificationMPI ltsMPIObject_;
     ttk::TopologicalOptimization topologyOptimizer_;
 
     SimplexId vertexNumber_{};
@@ -258,6 +266,13 @@ int ttk::TopologicalSimplification::execute(
 
       return topologyOptimizer_.execute(inputScalars, outputScalars, offsets,
                                         &triangulation, constraintDiagram);
+
+      case BACKEND::LTSMPI:
+        return ltsMPIObject_
+          .removeUnauthorizedExtrema<dataType, SimplexId, triangulationType>(
+            outputScalars, offsets, &triangulation, identifiers, constraintNumber,
+            addPerturbation);                   
+
     default:
       this->printErr(
         "Error, the backend for topological simplification is invalid");
