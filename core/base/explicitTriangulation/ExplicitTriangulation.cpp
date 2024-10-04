@@ -62,6 +62,14 @@ int ExplicitTriangulation::preconditionBoundaryEdgesInternal() {
     if(!(ttk::isRunningWithMPI()))
 #endif
       this->printErr("Empty dataset, precondition skipped");
+
+      #ifdef TTK_ENABLE_MPI
+        this->printMsg(std::to_string(vertexNumber_) + " number of vertices on this block",
+                         ttk::debug::Separator::L2);
+
+        this->printMsg(std::to_string(MPIrank_) + " id block on " + std::to_string(MPIsize_),
+                         ttk::debug::Separator::L2);
+#endif // TTK_ENABLE_MPI
     return 1;
   }
 

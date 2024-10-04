@@ -358,6 +358,11 @@ int ttk::ScalarFieldCriticalPoints::executeLegacy(
   printMsg("Processed " + std::to_string(vertexNumber_) + " vertices", 1,
            t.getElapsedTime(), threadNumber_);
 
+             #ifdef TTK_ENABLE_MPI
+        this->printMsg(std::to_string(MPIrank_) + " id block on " + std::to_string(MPIsize_),
+                         ttk::debug::Separator::L2);
+#endif // TTK_ENABLE_MPI
+
   return 0;
 }
 
